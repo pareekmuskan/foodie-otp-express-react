@@ -20,6 +20,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// API base URL - using relative URLs to work with Lovable's preview environment
+const API_BASE_URL = '';
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,14 +44,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
-      // In a real app, this would make an API call to your backend
-      const response = await fetch('/api/auth/login', {
+      
+      console.log('Attempting login with:', email);
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
 
       const data = await response.json();
 
@@ -74,8 +82,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signup = async (name: string, email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
-      // In a real app, this would make an API call to your backend
-      const response = await fetch('/api/auth/register', {
+      console.log('Attempting signup with:', { name, email });
+      
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -83,15 +92,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         body: JSON.stringify({ name, email, password }),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success('Registration successful! Please verify your email.');
-        return true;
-      } else {
-        toast.error(data.message || 'Registration failed');
-        return false;
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Registration error response:', errorText);
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
+
+      const data = await response.json();
+      
+      toast.success('Registration successful! Please verify your email.');
+      return true;
     } catch (error) {
       console.error('Signup error:', error);
       toast.error('An error occurred during registration');
@@ -104,8 +114,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const sendOtp = async (email: string): Promise<boolean> => {
     try {
       setIsLoading(true);
-      // In a real app, this would make an API call to your backend
-      const response = await fetch('/api/auth/send-otp', {
+      console.log('Sending OTP to:', email);
+      
+      const response = await fetch(`${API_BASE_URL}/api/auth/send-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -113,15 +124,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         body: JSON.stringify({ email }),
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
       const data = await response.json();
 
-      if (response.ok) {
-        toast.success('OTP sent to your email');
-        return true;
-      } else {
-        toast.error(data.message || 'Failed to send OTP');
-        return false;
-      }
+      toast.success('OTP sent to your email');
+      return true;
     } catch (error) {
       console.error('Send OTP error:', error);
       toast.error('An error occurred while sending OTP');
@@ -134,8 +144,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const verifyOtp = async (email: string, otp: string): Promise<boolean> => {
     try {
       setIsLoading(true);
-      // In a real app, this would make an API call to your backend
-      const response = await fetch('/api/auth/verify-otp', {
+      console.log('Verifying OTP for:', email);
+      
+      const response = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -143,19 +154,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         body: JSON.stringify({ email, otp }),
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
       const data = await response.json();
 
-      if (response.ok) {
-        if (data.user) {
-          setUser(data.user);
-          localStorage.setItem('user', JSON.stringify(data.user));
-        }
-        toast.success('OTP verified successfully');
-        return true;
-      } else {
-        toast.error(data.message || 'Invalid OTP');
-        return false;
+      if (data.user) {
+        setUser(data.user);
+        localStorage.setItem('user', JSON.stringify(data.user));
       }
+      toast.success('OTP verified successfully');
+      return true;
     } catch (error) {
       console.error('Verify OTP error:', error);
       toast.error('An error occurred during OTP verification');

@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 const Login: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -44,8 +45,8 @@ const Login: React.FC = () => {
     return password.length >= 6;
   };
 
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setError(null);
     
     if (!validateEmail(email)) {
@@ -53,7 +54,7 @@ const Login: React.FC = () => {
       return;
     }
 
-    if (activeTab === 'signup') {
+    if (activeTab === 'signup' && step === 'initial') {
       if (!name.trim()) {
         setError('Please enter your name');
         return;
@@ -179,7 +180,7 @@ const Login: React.FC = () => {
                     <Button 
                       type="button" 
                       variant="link" 
-                      onClick={() => handleSendOtp}
+                      onClick={() => handleSendOtp()}
                       className="text-foodie-primary"
                       disabled={isSubmitting}
                     >
@@ -276,7 +277,7 @@ const Login: React.FC = () => {
                     <Button 
                       type="button" 
                       variant="link" 
-                      onClick={handleSendOtp}
+                      onClick={() => handleSendOtp()}
                       className="text-foodie-primary"
                       disabled={isSubmitting}
                     >

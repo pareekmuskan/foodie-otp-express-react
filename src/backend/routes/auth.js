@@ -2,7 +2,6 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
 const User = require('../models/user');
 const OTP = require('../models/otp');
 const sendEmail = require('../utils/email');
